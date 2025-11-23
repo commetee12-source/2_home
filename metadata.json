@@ -1,0 +1,5 @@
+{
+  "name": "학교 안전지도 맵",
+  "description": "A 3D web application to visualize school safety incidents on a simplified campus map. Users can register incidents, which are then displayed as interactive markers in the 3D scene.",
+  "requestFramePermissions": []
+}
