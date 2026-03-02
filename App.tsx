@@ -462,6 +462,71 @@ const App: React.FC = () => {
         document.body.removeChild(link);
     };
 
+    const uploadIncidents = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target?.result as string;
+            if (!content) return;
+
+            const cleanContent = content.replace(/^\uFEFF/, '');
+            const lines = cleanContent.split(/\r?\n/);
+            if (lines.length < 2) return;
+
+            const newIncidents: Incident[] = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const parts: string[] = [];
+                let current = '';
+                let inQuotes = false;
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    if (char === '"') {
+                        if (inQuotes && line[j+1] === '"') {
+                            current += '"';
+                            j++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        parts.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                parts.push(current);
+
+                if (parts.length >= 4) {
+                    const [date, location, count, cause] = parts;
+                    const cleanLocation = location.trim();
+                    if (facilityLocations.includes(cleanLocation)) {
+                        newIncidents.push({
+                            id: Date.now() + i,
+                            date: date.trim(),
+                            location: cleanLocation,
+                            count: parseInt(count, 10) || 1,
+                            cause: cause.trim()
+                        });
+                    }
+                }
+            }
+
+            if (newIncidents.length > 0) {
+                setIncidents(prev => [...newIncidents, ...prev]);
+                alert(`${newIncidents.length}건의 사고 기록이 업로드되었습니다.`);
+            } else {
+                alert('유효한 사고 기록을 찾을 수 없습니다. 파일 형식을 확인해주세요.');
+            }
+            e.target.value = '';
+        };
+        reader.readAsText(file);
+    };
+
     const handleCloseModal = () => {
         setSelectedIncident(null);
         setHighlightedIncidentId(null);
@@ -532,6 +597,10 @@ const App: React.FC = () => {
                         <span className="mr-2 text-green-400">📋</span> 사고 목록
                     </h1>
                     <div className="flex gap-2">
+                        <label className="cursor-pointer text-[10px] bg-indigo-900/50 hover:bg-indigo-800 px-2 py-1 rounded text-indigo-200 transition-colors">
+                            업로드
+                            <input type="file" accept=".csv" onChange={uploadIncidents} className="hidden" />
+                        </label>
                         <button onClick={downloadIncidents} className="text-[10px] bg-blue-900/50 hover:bg-blue-800 px-2 py-1 rounded text-blue-200 transition-colors">다운로드</button>
                         <button onClick={clearAllData} className="text-[10px] bg-red-900/50 hover:bg-red-800 px-2 py-1 rounded text-red-200 transition-colors">전체 초기화</button>
                     </div>
