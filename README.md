@@ -18,3 +18,4 @@ View your app in AI Studio: https://ai.studio/apps/f5fabe40-7eba-4658-8aef-c5419
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+학교사고를 기록하여 안전지도맵을 만들고 그 대책을 보고서로 제시한다
